@@ -1,7 +1,5 @@
 # txt2txt - An easy to use seq2seq implementation with Attention for text to text use cases
 
-Usage:
-
 # Training a model
 ```
 from txt2txt import build_params, build_model, convert_training_data
