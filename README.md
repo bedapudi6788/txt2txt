@@ -2,10 +2,9 @@
 
 Usage:
 
+# Training a model
 ```
 from txt2txt import build_params, build_model, convert_training_data
-
-# Training a model
 
 input_data = ['123', '213', '312', '321', '132', '231']
 output_data = ['123', '123', '123', '123', '123', '123']
@@ -20,9 +19,11 @@ checkpoint = ModelCheckpoint('test/checkpoint', monitor='val_acc', verbose=1, sa
 callbacks_list = [checkpoint]
 
 model.fit(input_data, output_data, validation_data=(input_data, output_data), batch_size=2, epochs=20, callbacks=callbacks_list)
+```
 
-# Loadin a trained model and running inference
 
+# Loading a trained model and running inference
+```
 from txt2txt import build_model, infer
 model, params = build_model(params_path='test/params')
 model.load_weights('path_to_checkpoint_file')
