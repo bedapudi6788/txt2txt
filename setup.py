@@ -18,12 +18,12 @@ URL = 'https://github.com/bedapudi6788/txt2txt'
 EMAIL = 'praneethbedapudi@gmail.com'
 AUTHOR = 'BEDAPUDI PRANEETH'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
     'numpy',
-    'keras'
+    'keras>=2.2.0'
 ]
 
 # What packages are optional?
