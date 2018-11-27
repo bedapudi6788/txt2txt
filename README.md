@@ -27,3 +27,14 @@ model, params = build_model(params_path='test/params')
 model.load_weights('path_to_checkpoint_file')
 infer(input_text, model, params)
 ```
+
+# Requirements
+This module needs Keras and Tensorflow. (tested with tf>=1.8.0, keras>=2.2.0).
+
+Tensorflow is not included in setup.py and needs to be installed seperately.
+
+# What's the use of this module
+
+Working with seq2seq tasks in NLP, I realised there aren't any easy to use, simple to understand and good performing libraries available for this. Though libraries like FairSeq or transformer are available they are in general either too complex for a newbie to understand or most probably overkill (and are very tough to train) for simple projects.
+
+This module provides pre-built seq2seq model with Attention that performs excellently on most of the NLP taks. (Tested with Punctuation correction, transliteration and spell correction)
