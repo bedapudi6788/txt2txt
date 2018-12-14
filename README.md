@@ -1,4 +1,4 @@
-# txt2txt - An easy to use seq2seq implementation with Attention for text to text use cases
+# txt2txt - An extremely easy to use seq2seq implementation with Attention for text to text use cases
 
 # Training a model
 ```
