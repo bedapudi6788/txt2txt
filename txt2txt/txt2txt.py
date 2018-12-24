@@ -69,7 +69,7 @@ def generate(text, input_encoding_dict, model, max_input_length, max_output_leng
         
         temp_running_beams = []
         for running_beam, probs in running_beams:
-            if len(probs) == min_cut_off_len:
+            if len(probs) >= min_cut_off_len:
                 completed_beams.append([running_beam[:,1:], probs])
             else:
                 prediction = model.predict([encoder_input, running_beam])[0]
