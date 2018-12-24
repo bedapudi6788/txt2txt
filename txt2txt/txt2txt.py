@@ -52,8 +52,8 @@ def decode_sequence(decoding_dict, sequence):
 
 
 def generate(text, input_encoding_dict, model, max_input_length, max_output_length, beam_size, max_beams, min_cut_off_len, cut_off_ratio):
-    cut_off_len = max(min_cut_off_len, cut_off_ratio*len(text))
-    cut_off_len = min(min_cut_off_len, max_output_length)
+    min_cut_off_len = max(min_cut_off_len, cut_off_ratio*len(text))
+    min_cut_off_len = min(min_cut_off_len, max_output_length)
 
     encoder_input = encode_sequences(input_encoding_dict, [text], max_input_length)
 
@@ -69,7 +69,7 @@ def generate(text, input_encoding_dict, model, max_input_length, max_output_leng
         
         temp_running_beams = []
         for running_beam, probs in running_beams:
-            if len(probs) == cut_off_len:
+            if len(probs) == min_cut_off_len:
                 completed_beams.append([running_beam[:,1:], probs])
             else:
                 prediction = model.predict([encoder_input, running_beam])[0]
@@ -86,7 +86,7 @@ def generate(text, input_encoding_dict, model, max_input_length, max_output_leng
                     temp_running_beams.append([temp_running_beam, probs + [ith_prob]])
                 
         running_beams = [b for b in temp_running_beams]
-        
+
     return completed_beams
 
 def infer(text, model, params, beam_size=3, max_beams=3, min_cut_off_len=10, cut_off_ratio=1.5):
