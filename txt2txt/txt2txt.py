@@ -51,27 +51,56 @@ def decode_sequence(decoding_dict, sequence):
     return text
 
 
-def generate(text, input_encoding_dict, model, max_input_length, max_output_length):
+def generate(text, input_encoding_dict, model, max_input_length, max_output_length, beam_size, max_beams, min_cut_off_len, cut_off_ratio):
+    cut_off_len = max(min_cut_off_len, cut_off_ratio*len(text))
+    cut_off_len = min(min_cut_off_len, max_output_length)
+
     encoder_input = encode_sequences(input_encoding_dict, [text], max_input_length)
-    decoder_input = np.zeros(shape=(len(encoder_input), max_output_length))
-    decoder_input[:,0] = char_start_encoding
-    for i in range(1, max_output_length):
-        output = model.predict([encoder_input, decoder_input]).argmax(axis=2)
-        decoder_input[:,i] = output[:,i]
+
+    completed_beams = []
+    running_beams = [
+        [np.zeros(shape=(len(encoder_input), max_output_length)), [1]]
+        ]
+    running_beams[0][0][:,0] = char_start_encoding
+    
+    while len(running_beams) != 0:
+        running_beams = sorted(running_beams, key=lambda tup:np.prod(tup[1]), reverse=True)
+        running_beams = running_beams[:max_beams]
         
-        if decoder_input[:,i] == char_padding_encoding:
-            return decoder_input[:,1:]
+        temp_running_beams = []
+        for running_beam, probs in running_beams:
+            if len(probs) == cut_off_len:
+                completed_beams.append([running_beam[:,1:], probs])
+            else:
+                prediction = model.predict([encoder_input, running_beam])[0]
+                sorted_args = prediction.argsort()
+                sorted_probs = np.sort(prediction)
 
-    return decoder_input[:,1:]
+                for i in range(1, beam_size+1):
+                    temp_running_beam = np.copy(running_beam)
+                    i = -1 * i
+                    ith_arg = sorted_args[:, i][len(probs)]
+                    ith_prob = sorted_probs[:, i][len(probs)]
+                    
+                    temp_running_beam[:, len(probs)] = ith_arg
+                    temp_running_beams.append([temp_running_beam, probs + [ith_prob]])
+                
+        running_beams = [b for b in temp_running_beams]
+        
+    return completed_beams
 
-def infer(text, model, params):
+def infer(text, model, params, beam_size=3, max_beams=3, min_cut_off_len=10, cut_off_ratio=1.5):
     input_encoding_dict = params['input_encoding']
     output_decoding_dict = params['output_decoding']
     max_input_length = params['max_input_length']
     max_output_length = params['max_output_length']
 
-    decoder_output = generate(text, input_encoding_dict, model, max_input_length, max_output_length)
-    return decode_sequence(output_decoding_dict, decoder_output[0])
+    decoder_outputs = generate(text, input_encoding_dict, model, max_input_length, max_output_length, beam_size, max_beams, min_cut_off_len, cut_off_ratio)
+    outputs = []
+    for decoder_output, probs in decoder_outputs:
+        outputs.append({'sequence': decode_sequence(output_decoding_dict, decoder_output[0]), 'prob': np.prod(probs)})
+
+    return outputs
 
 
 def build_params(input_data = [], output_data = [], params_path = 'test_params', max_lenghts = (5,5)):
