@@ -28,7 +28,7 @@ model.load_weights('path_to_checkpoint_file')
 infer(input_text, model, params)
 ```
 
-Note: Checkout https://github.com/bedapudi6788/deeppunct for pre-trained model for english punctuation correction.
+Note: Checkout https://github.com/bedapudi6788/deepcorrect for pre-trained models for english punctuation correction and grammar correction.
 
 # Requirements
 This module needs Keras and Tensorflow. (tested with tf>=1.8.0, keras>=2.2.0).
