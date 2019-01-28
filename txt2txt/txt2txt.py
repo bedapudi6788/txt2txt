@@ -146,7 +146,8 @@ def convert_training_data(input_data, output_data, params):
     y=[training_decoder_output]
     return x, y
 
-def build_model(params_path = 'test/params'):
+def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True):
+    # generateing the encoding, decoding dicts
     params = build_params(params_path = params_path)
 
     input_encoding = params['input_encoding']
@@ -165,16 +166,24 @@ def build_model(params_path = 'test/params'):
     print('Output decoding', output_decoding)
 
 
+    # We need to define the max input lengths and max output lengths before training the model.
+    # We pad the inputs and outputs to these max lengths
     encoder_input = Input(shape=(max_input_length,))
     decoder_input = Input(shape=(max_output_length,))
 
-    encoder = Embedding(input_dict_size, 128, input_length=max_input_length, mask_zero=True)(encoder_input)
-    encoder = Bidirectional(LSTM(128, return_sequences=True, unroll=True), merge_mode='concat')(encoder)
+    # Need to make the number of hidden units configurable
+    encoder = Embedding(input_dict_size, enc_lstm_units, input_length=max_input_length, mask_zero=True)(encoder_input)
+    # using concat merge mode since in my experiments it gave the best results same with unroll
+    encoder = Bidirectional(LSTM(enc_lstm_units, return_sequences=True, unroll=unroll), merge_mode='concat')(encoder)
     encoder_last = encoder[:,-1,:]
 
-    decoder = Embedding(output_dict_size, 256, input_length=max_output_length, mask_zero=True)(decoder_input)
-    decoder = LSTM(256, return_sequences=True, unroll=True)(decoder, initial_state=[encoder_last, encoder_last])
+    # using 2* enc_lstm_units because we are using concat merge mode
+    # cannot use bidirectionals lstm for decoding (obviously!)
 
+    decoder = Embedding(output_dict_size, 2 * enc_lstm_units, input_length=max_output_length, mask_zero=True)(decoder_input)
+    decoder = LSTM(2 * enc_lstm_units, return_sequences=True, unroll=unroll)(decoder, initial_state=[encoder_last, encoder_last])
+
+    # luong attention
     attention = dot([decoder, encoder], axes=[2, 2])
     attention = Activation('softmax', name='attention')(attention)
 
@@ -182,11 +191,11 @@ def build_model(params_path = 'test/params'):
 
     decoder_combined_context = concatenate([context, decoder])
 
-    output = TimeDistributed(Dense(128, activation="tanh"))(decoder_combined_context)
+    output = TimeDistributed(Dense(enc_lstm_units, activation="tanh"))(decoder_combined_context)
     output = TimeDistributed(Dense(output_dict_size, activation="softmax"))(output)
 
     model = Model(inputs=[encoder_input, decoder_input], outputs=[output])
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     model.summary()
     
     return model, params
@@ -205,4 +214,4 @@ if __name__ == '__main__':
     checkpoint = ModelCheckpoint('test/checkpoint', monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     callbacks_list = [checkpoint]
 
-    model.fit(input_data, output_data, validation_data=(input_data, output_data), batch_size=2, epochs=20, callbacks=callbacks_list)
+    model.fit(input_data, output_data, validation_data=(input_data, output_data), batch_size=2, epochs=40, callbacks=callbacks_list)
