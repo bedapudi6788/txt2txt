@@ -100,6 +100,28 @@ def infer(text, model, params, beam_size=3, max_beams=3, min_cut_off_len=10, cut
 
     return outputs
 
+def generate_greedy(text, input_encoding_dict, model, max_input_length, max_output_length):
+    encoder_input = encode_sequences(input_encoding_dict, [text], max_input_length)
+    decoder_input = np.zeros(shape=(len(encoder_input), max_output_length))
+    decoder_input[:,0] = char_start_encoding
+    for i in range(1, max_output_length):
+        output = model.predict([encoder_input, decoder_input]).argmax(axis=2)
+        decoder_input[:,i] = output[:,i]
+        
+        if decoder_input[:,i] == char_padding_encoding:
+            return decoder_input[:,1:]
+
+    return decoder_input[:,1:]
+
+def infer_greedy(text, model, params):
+    input_encoding_dict = params['input_encoding']
+    output_decoding_dict = params['output_decoding']
+    max_input_length = params['max_input_length']
+    max_output_length = params['max_output_length']
+
+    decoder_output = generate_greedy(text, input_encoding_dict, model, max_input_length, max_output_length)
+    return decode_sequence(output_decoding_dict, decoder_output[0])
+
 
 def build_params(input_data = [], output_data = [], params_path = 'test_params', max_lenghts = (5,5)):
     if os.path.exists(params_path):
