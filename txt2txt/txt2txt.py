@@ -12,8 +12,6 @@ from keras.models import Model, load_model
 
 from keras.callbacks import ModelCheckpoint
 
-# Defining constants here
-encoding_vector_size = 128
 
 # Placeholder for max lengths of input and output which are user configruable constants
 max_input_length = None
@@ -34,10 +32,10 @@ def build_sequence_encode_decode_dicts(input_data):
     
     return encoding_dict, decoding_dict, len(encoding_dict) + 2
 
-def encode_sequences(encoding_dict, sequences, encoding_vector_size):
-    encoded_data = np.zeros(shape=(len(sequences), encoding_vector_size))
+def encode_sequences(encoding_dict, sequences, max_length):
+    encoded_data = np.zeros(shape=(len(sequences), max_length))
     for i in range(len(sequences)):
-        for j in range(min(len(sequences[i]), encoding_vector_size)):
+        for j in range(min(len(sequences[i]), max_length)):
             encoded_data[i][j] = encoding_dict[sequences[i][j]]
     return encoded_data
 
