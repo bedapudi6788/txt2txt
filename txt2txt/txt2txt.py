@@ -166,7 +166,7 @@ def convert_training_data(input_data, output_data, params):
     y=[training_decoder_output]
     return x, y
 
-def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True, use_gru=False):
+def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True, use_gru=False, optimizer='adam'):
     # generateing the encoding, decoding dicts
     params = build_params(params_path = params_path)
 
@@ -229,7 +229,7 @@ def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True
     output = TimeDistributed(Dense(output_dict_size, activation="softmax"))(output)
 
     model = Model(inputs=[encoder_input, decoder_input], outputs=[output])
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
     model.summary()
     
     return model, params
