@@ -7,7 +7,7 @@ np.random.seed(6788)
 import tensorflow as tf
 tf.set_random_seed(6788)
 
-from keras.layers import Input, Embedding, LSTM, TimeDistributed, Dense, SimpleRNN, Activation, dot, concatenate, Bidirectional
+from keras.layers import Input, Embedding, LSTM, TimeDistributed, Dense, SimpleRNN, Activation, dot, concatenate, Bidirectional, GRU
 from keras.models import Model, load_model
 
 from keras.callbacks import ModelCheckpoint
@@ -166,7 +166,7 @@ def convert_training_data(input_data, output_data, params):
     y=[training_decoder_output]
     return x, y
 
-def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True):
+def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True, use_gru=False):
     # generateing the encoding, decoding dicts
     params = build_params(params_path = params_path)
 
@@ -194,18 +194,28 @@ def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True
     # Need to make the number of hidden units configurable
     encoder = Embedding(input_dict_size, enc_lstm_units, input_length=max_input_length, mask_zero=True)(encoder_input)
     # using concat merge mode since in my experiments it gave the best results same with unroll
-    encoder = Bidirectional(LSTM(enc_lstm_units, return_sequences=True, return_state=True, unroll=unroll), merge_mode='concat')(encoder)
+    if not use_gru:
+        encoder = Bidirectional(LSTM(enc_lstm_units, return_sequences=True, return_state=True, unroll=unroll), merge_mode='concat')(encoder)
+        encoder_outs, forward_h, forward_c, backward_h, backward_c = encoder
+        encoder_h = concatenate([forward_h, backward_h])
+        encoder_c = concatenate([forward_c, backward_c])
     
-    encoder_outs, forward_h, forward_c, backward_h, backward_c = encoder
-    encoder_h = concatenate([forward_h, backward_h])
-    encoder_c = concatenate([forward_c, backward_c])
-
+    else:
+        encoder = Bidirectional(GRU(enc_lstm_units, return_sequences=True, return_state=True, unroll=unroll), merge_mode='concat')(encoder)        
+        encoder_outs, forward_h, backward_h= encoder
+        encoder_h = concatenate([forward_h, backward_h])
+    
 
     # using 2* enc_lstm_units because we are using concat merge mode
     # cannot use bidirectionals lstm for decoding (obviously!)
-
+    
     decoder = Embedding(output_dict_size, 2 * enc_lstm_units, input_length=max_output_length, mask_zero=True)(decoder_input)
-    decoder = LSTM(2 * enc_lstm_units, return_sequences=True, unroll=unroll)(decoder, initial_state=[encoder_h, encoder_c])
+
+    if not use_gru:
+        decoder = LSTM(2 * enc_lstm_units, return_sequences=True, unroll=unroll)(decoder, initial_state=[encoder_h, encoder_c])
+    else:
+        decoder = GRU(2 * enc_lstm_units, return_sequences=True, unroll=unroll)(decoder, initial_state=encoder_h)
+
 
     # luong attention
     attention = dot([decoder, encoder_outs], axes=[2, 2])
