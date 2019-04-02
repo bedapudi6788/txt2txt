@@ -194,20 +194,24 @@ def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True
     # Need to make the number of hidden units configurable
     encoder = Embedding(input_dict_size, enc_lstm_units, input_length=max_input_length, mask_zero=True)(encoder_input)
     # using concat merge mode since in my experiments it gave the best results same with unroll
-    encoder = Bidirectional(LSTM(enc_lstm_units, return_sequences=True, unroll=unroll), merge_mode='concat')(encoder)
-    encoder_last = encoder[:,-1,:]
+    encoder = Bidirectional(LSTM(enc_lstm_units, return_sequences=True, return_state=True, unroll=unroll), merge_mode='concat')(encoder)
+    
+    encoder_outs, forward_h, forward_c, backward_h, backward_c = encoder
+    encoder_h = concatenate([forward_h, backward_h])
+    encoder_c = concatenate([forward_c, backward_c])
+
 
     # using 2* enc_lstm_units because we are using concat merge mode
     # cannot use bidirectionals lstm for decoding (obviously!)
 
     decoder = Embedding(output_dict_size, 2 * enc_lstm_units, input_length=max_output_length, mask_zero=True)(decoder_input)
-    decoder = LSTM(2 * enc_lstm_units, return_sequences=True, unroll=unroll)(decoder, initial_state=[encoder_last, encoder_last])
+    decoder = LSTM(2 * enc_lstm_units, return_sequences=True, unroll=unroll)(decoder, initial_state=[encoder_h, encoder_c])
 
     # luong attention
-    attention = dot([decoder, encoder], axes=[2, 2])
+    attention = dot([decoder, encoder_outs], axes=[2, 2])
     attention = Activation('softmax', name='attention')(attention)
 
-    context = dot([attention, encoder], axes=[2,1])
+    context = dot([attention, encoder_outs], axes=[2,1])
 
     decoder_combined_context = concatenate([context, decoder])
 
