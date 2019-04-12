@@ -1,5 +1,11 @@
 # txt2txt - An extremely easy to use seq2seq implementation with Attention for text to text use cases
 
+
+
+[![DOI](https://zenodo.org/badge/159134969.svg)](https://zenodo.org/badge/latestdoi/159134969)
+
+
+
 # Installation
 
 ```
