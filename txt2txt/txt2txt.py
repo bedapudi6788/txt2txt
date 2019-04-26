@@ -100,27 +100,38 @@ def infer(text, model, params, beam_size=3, max_beams=3, min_cut_off_len=10, cut
 
     return outputs
 
-def generate_greedy(text, input_encoding_dict, model, max_input_length, max_output_length):
-    encoder_input = encode_sequences(input_encoding_dict, [text], max_input_length)
+def generate_greedy(texts, input_encoding_dict, model, max_input_length, max_output_length):
+    if not isinstance(texts, list):
+        texts = [texts]
+
+    encoder_input = encode_sequences(input_encoding_dict, texts, max_input_length)
     decoder_input = np.zeros(shape=(len(encoder_input), max_output_length))
     decoder_input[:,0] = char_start_encoding
     for i in range(1, max_output_length):
         output = model.predict([encoder_input, decoder_input]).argmax(axis=2)
         decoder_input[:,i] = output[:,i]
         
-        if decoder_input[:,i] == char_padding_encoding:
+        if decoder_input[:,i].all() == char_padding_encoding:
             return decoder_input[:,1:]
 
     return decoder_input[:,1:]
 
-def infer_greedy(text, model, params):
+def infer_greedy(texts, model, params):
+    return_string = False
+    if not isinstance(texts, list):
+        return_string = True
+        texts = [texts]
+
     input_encoding_dict = params['input_encoding']
     output_decoding_dict = params['output_decoding']
     max_input_length = params['max_input_length']
     max_output_length = params['max_output_length']
 
-    decoder_output = generate_greedy(text, input_encoding_dict, model, max_input_length, max_output_length)
-    return decode_sequence(output_decoding_dict, decoder_output[0])
+    decoder_output = generate_greedy(texts, input_encoding_dict, model, max_input_length, max_output_length)
+    if return_string:
+        return decode_sequence(output_decoding_dict, decoder_output[0])
+
+    return [decode_sequence(output_decoding_dict, i) for i in decoder_output]
 
 
 def build_params(input_data = [], output_data = [], params_path = 'test_params', max_lenghts = (5,5)):
@@ -166,7 +177,7 @@ def convert_training_data(input_data, output_data, params):
     y=[training_decoder_output]
     return x, y
 
-def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True, use_gru=False, optimizer='adam'):
+def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True, use_gru=False, optimizer='adam', display_summary=True):
     # generateing the encoding, decoding dicts
     params = build_params(params_path = params_path)
 
@@ -180,10 +191,11 @@ def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True
     max_output_length = params['max_output_length']
 
 
-    print('Input encoding', input_encoding)
-    print('Input decoding', input_decoding)
-    print('Output encoding', output_encoding)
-    print('Output decoding', output_decoding)
+    if display_summary:
+        print('Input encoding', input_encoding)
+        print('Input decoding', input_decoding)
+        print('Output encoding', output_encoding)
+        print('Output decoding', output_decoding)
 
 
     # We need to define the max input lengths and max output lengths before training the model.
@@ -230,7 +242,9 @@ def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True
 
     model = Model(inputs=[encoder_input, decoder_input], outputs=[output])
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
-    model.summary()
+
+    if display_summary:
+        model.summary()
     
     return model, params
 
