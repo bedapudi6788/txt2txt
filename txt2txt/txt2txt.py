@@ -111,7 +111,7 @@ def generate_greedy(texts, input_encoding_dict, model, max_input_length, max_out
         output = model.predict([encoder_input, decoder_input]).argmax(axis=2)
         decoder_input[:,i] = output[:,i]
         
-        if decoder_input[:,i].all() == char_padding_encoding:
+        if np.all(decoder_input[:,i] == char_padding_encoding):
             return decoder_input[:,1:]
 
     return decoder_input[:,1:]
