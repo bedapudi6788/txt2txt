@@ -53,11 +53,9 @@ def generate(text, input_encoding_dict, model, max_input_length, max_output_leng
     min_cut_off_len = max(min_cut_off_len, cut_off_ratio*len(text))
     min_cut_off_len = min(min_cut_off_len, max_output_length)
 
-    encoder_input = encode_sequences(input_encoding_dict, [text], max_input_length)
-
     completed_beams = []
     running_beams = [
-        [np.zeros(shape=(len(encoder_input), max_output_length)), [1]]
+        [np.zeros(shape=(len(text), max_output_length)), [1]]
         ]
     running_beams[0][0][:,0] = char_start_encoding
     
@@ -65,12 +63,16 @@ def generate(text, input_encoding_dict, model, max_input_length, max_output_leng
         running_beams = sorted(running_beams, key=lambda tup:np.prod(tup[1]), reverse=True)
         running_beams = running_beams[:max_beams]
         
+        batch_encoder_input = encode_sequences(input_encoding_dict, [text for _ in running_beams], max_input_length)
+        batch_decoder_input = np.asarray([i[0][0] for i in running_beams])
+        batch_predictions = model.predict([batch_encoder_input, batch_decoder_input])
+
         temp_running_beams = []
-        for running_beam, probs in running_beams:
+        for running_beam_index, (running_beam, probs) in enumerate(running_beams):
             if len(probs) >= min_cut_off_len:
                 completed_beams.append([running_beam[:,1:], probs])
             else:
-                prediction = model.predict([encoder_input, running_beam])[0]
+                prediction = batch_predictions[running_beam_index]
                 sorted_args = prediction.argsort()
                 sorted_probs = np.sort(prediction)
 
