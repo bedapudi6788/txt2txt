@@ -1,11 +1,15 @@
 import os
 import pickle
+import logging
 
 import numpy as np
 np.random.seed(6788)
 
 import tensorflow as tf
-tf.set_random_seed(6788)
+try:
+    tf.set_random_seed(6788)
+except:
+    pass
 
 from keras.layers import Input, Embedding, LSTM, TimeDistributed, Dense, SimpleRNN, Activation, dot, concatenate, Bidirectional, GRU
 from keras.models import Model, load_model
