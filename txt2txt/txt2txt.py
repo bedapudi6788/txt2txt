@@ -316,6 +316,24 @@ def infer_greedy(texts, model, params):
 
 
 def build_params(input_data = [], output_data = [], params_path = 'test_params', max_lenghts = (5,5)):
+    """
+    Build the params and save them as a pickle. (If not already present.)
+
+    Parameters:
+
+    input_data (list): List of input strings.
+
+    output_data (list): List of output strings.
+
+    params_path (str): Path for saving the params.
+
+    max_lenghts (tuple): (max_input_length, max_output_length)
+
+    Returns:
+    
+    params (dict): Generated params (encoding, decoding dicts ..).
+
+    """
     if os.path.exists(params_path):
         print('Loading the params file')
         params = pickle.load(open(params_path, 'rb'))
@@ -338,6 +356,22 @@ def build_params(input_data = [], output_data = [], params_path = 'test_params',
     return params
 
 def convert_training_data(input_data, output_data, params):
+    """
+    Encode training data.
+
+    Parameters:
+
+    input_data (list): List of input strings.
+
+    output_data (list): List of output strings.
+
+    params (dict): Generated params (encoding, decoding dicts ..).
+
+    Returns:
+    
+    x, y: encoded inputs, outputs.
+
+    """
     input_encoding = params['input_encoding']
     input_decoding = params['input_decoding']
     input_dict_size = params['input_dict_size']
@@ -359,6 +393,31 @@ def convert_training_data(input_data, output_data, params):
     return x, y
 
 def build_model(params_path = 'test/params', enc_lstm_units = 128, unroll = True, use_gru=False, optimizer='adam', display_summary=True):
+    """
+    Build keras model
+
+    Parameters:
+
+    params_path (str): Path for saving/loading the params.
+
+    enc_lstm_units (int): Positive integer, dimensionality of the output space.
+
+    unroll (bool): Boolean (default False). If True, the network will be unrolled, else a symbolic loop will be used. Unrolling can speed-up a RNN, although it tends to be more memory-intensive. Unrolling is only suitable for short sequences.
+
+    use_gru (bool): GRU will be used instead of LSTM
+
+    optimizer (str): optimizer to be used
+
+    display_summary (bool): Set to true for verbose information.
+
+
+    Returns:
+
+    model (keras model): built model object.
+    
+    params (dict): Generated params (encoding, decoding dicts ..).
+
+    """
     # generateing the encoding, decoding dicts
     params = build_params(params_path = params_path)
 
