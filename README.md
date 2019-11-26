@@ -4,6 +4,8 @@
 
 [![DOI](https://zenodo.org/badge/159134969.svg)](https://zenodo.org/badge/latestdoi/159134969)
 
+Documentation can be found at http://bpraneeth.com/docs/txt2txt/
+
 # Examples
 1. [Adding two numbers](https://colab.research.google.com/drive/11lVvfa2EGYQ0y3O5gA--01iR0J6IRMCk)
 2. [More Complex Math and fit_generator](https://colab.research.google.com/drive/1JqBxRiTZ0D1rB3bsw46FaA1McTqrDGCe)
