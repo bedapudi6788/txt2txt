@@ -2,7 +2,7 @@
 
 
 
-[![DOI](https://zenodo.org/badge/159134969.svg)](https://zenodo.org/badge/latestdoi/159134969)
+[![Downloads](https://pepy.tech/badge/txt2txt)](https://pepy.tech/project/txt2txt) [![DOI](https://zenodo.org/badge/159134969.svg)](https://zenodo.org/badge/latestdoi/159134969)
 
 Documentation can be found at http://bpraneeth.com/docs/txt2txt/
 
