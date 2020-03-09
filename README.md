@@ -63,7 +63,3 @@ This module provides pre-built seq2seq model with Attention that performs excell
 Make number of encoder and decoder layers configurable
 
 Give option to add language model probability in beam search
-
-# License
-
-Although txt2txt is licensed under GPL, if you want to use it commercially without open sourcing your code please email me or raise a issue in this repo so that I can provide you explicit written permission to use as you wish. The only reason for doing this is, it would be nice to know if some company is using my work.
