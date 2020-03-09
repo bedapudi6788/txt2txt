@@ -13,12 +13,12 @@ Documentation can be found at http://bpraneeth.com/docs/txt2txt/
 
 # Installation
 
-```
+```bash
 pip install txt2txt
 ```
 
 # Training a model
-```
+```python
 from txt2txt import build_params, build_model, convert_training_data
 
 input_data = ['123', '213', '312', '321', '132', '231']
@@ -38,7 +38,7 @@ model.fit(input_data, output_data, validation_data=(input_data, output_data), ba
 
 
 # Loading a trained model and running inference
-```
+```python
 from txt2txt import build_model, infer
 model, params = build_model(params_path='test/params')
 model.load_weights('path_to_checkpoint_file')
